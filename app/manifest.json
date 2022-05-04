@@ -1,0 +1,41 @@
+{
+  "name": "/GEN",
+  "description": "Tone interpreter for online text, powered by Sentiment Analysis!",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "icons": {
+    "16": "/images/icon_128.png",
+    "19": "/images/icon_128.png",
+    "38": "/images/icon_128.png",
+    "48": "/images/icon_128.png",
+    "128": "/images/icon_128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [ "*://*/*" ],
+      "js": ["content.js"],
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/images/icon_128.png",
+      "19": "/images/icon_128.png",
+      "38": "/images/icon_128.png",
+      "48": "/images/icon_128.png",
+      "128": "/images/icon_128.png"
+    }
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "contextMenus"
+  ]
+}

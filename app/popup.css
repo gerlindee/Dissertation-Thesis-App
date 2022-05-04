@@ -1,0 +1,232 @@
+:root {
+/*  Application theme colours */
+    --background: #EBC2C1;
+    --primary: #CD5D51;
+    --accent: #904139;
+
+/*  General colours */
+    --white: #FFFFFF;
+}
+
+body {
+    min-width: 350px;
+    width: 100%;
+    height: auto;
+    background-color: var(--background);
+    margin: 0;
+    padding: 0;
+    border: 5px solid var(--primary);
+    border-radius: 15px;
+    overflow: hidden;
+    display: block;
+    box-sizing: border-box;
+    font-family: 'Orelega One', Arial, serif;
+}
+
+.popup_header {
+    align-content: center;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-left: 80px;
+    padding-right: 80px;
+}
+
+.popup_header img {
+    width: 110px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: -10px;
+}
+
+.popup_header h1 {
+    color: var(--primary);
+    font-size: 18px;
+}
+
+.popup_body {
+    margin-bottom: 10px;
+    margin-left: 12px;
+}
+
+.popup_body hr {
+    border: 2px solid var(--primary);
+    border-radius: 6px;
+    margin-left: -24px;
+    margin-right: -4px;
+}
+
+.popup_body h1 {
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.grid_permanent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    margin-top: -5px;
+    margin-bottom: -5px;
+}
+
+/* Toggle On/Off Slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 55px;
+    height: 27px;
+    margin-left: 100px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--accent);
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 19px;
+    width: 19px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--white);
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #CD5D51;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #CD5D51;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Drop-down button for colour customisation */
+.grid_colours {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+}
+
+.colours_btn {
+    margin-left: -7px;
+    background-color: var(--background);
+    border: none;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--primary);
+    text-align: left;
+    transition: 0.3s;
+    cursor:pointer;
+}
+
+.colours_btn:hover {
+    color: var(--accent);
+}
+
+.arrow-icon {
+    background-color: var(--background);
+    padding: 0.5em;
+    margin-top: 7px;
+    margin-bottom: 7px;
+    position: relative;
+    cursor: pointer;
+    margin-left: 103px;
+}
+
+.left-bar {
+    position: absolute;
+    background-color: transparent;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 10px;
+    display: block;
+    transform: rotate(35deg);
+    float: right;
+    border-radius: 4px;
+}
+
+.left-bar:after {
+    content:"";
+    background-color: var(--primary);
+    width: 30px;
+    height: 10px;
+    display: block;
+    float: right;
+    border-radius: 6px 10px 10px 6px;
+    transition: all 0.5s cubic-bezier(.25,1.7,.35,.8);
+    z-index: -1;
+}
+
+.right-bar {
+    position: absolute;
+    background-color: transparent;
+    top: 0;
+    left: 17px;
+    width: 30px;
+    height: 10px;
+    display: block;
+    transform: rotate(-35deg);
+    float: right;
+    border-radius: 2px;
+}
+
+.right-bar:after {
+     content:"";
+     background-color: var(--primary);
+     width: 30px;
+     height: 10px;
+     display: block;
+     float: right;
+     border-radius: 10px 6px 6px 10px;
+    transition: all 0.5s cubic-bezier(.25,1.7,.35,.8);
+    z-index: -1;
+}
+
+.arrow_open .left-bar {
+}
+
+.arrow_open .left-bar:after {
+    background-color: var(--accent);
+    transform-origin: center center;
+    transform: rotate(-70deg);
+}
+
+.arrow_open .right-bar:after {
+    background-color: var(--accent);
+    transform-origin: center center;
+    transform: rotate(70deg);
+}
+
