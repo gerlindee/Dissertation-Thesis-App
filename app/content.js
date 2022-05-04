@@ -20,6 +20,7 @@ function highlightSelection(selectionString, container, selection, colour) {
         selectionString: selectionString,
         anchor: $(selection.anchorNode),
         anchorOffset: selection.anchorOffset,
+        container: $(container),
         focus: $(selection.focusNode),
         focusOffset: selection.focusOffset,
     };
@@ -45,14 +46,22 @@ function highlightSelection(selectionString, container, selection, colour) {
     if (selection.removeAllRanges) selection.removeAllRanges();
 
     // Step 4:
-    // const parent = highlightInfo.container.parent();
-    // parent.find(`.${HIGHLIGHT_CLASS}`).each((i, el) => {
-    //     el.addEventListener('mouseenter', onHighlightMouseEnterOrClick);
-    //     el.addEventListener('click', onHighlightMouseEnterOrClick);
-    //     el.addEventListener('mouseleave', onHighlightMouseLeave);
-    // });
+    const parent = highlightInfo.container.parent();
+    const HIGHLIGHT_CLASS = 'highlighter--highlighted'; /* eslint-disable-line no-redeclare */
+    parent.find(`.${HIGHLIGHT_CLASS}`).each((i, el) => {
+        el.addEventListener('mouseenter', onHighlightMouseEnterOrClick);
+        el.addEventListener('mouseleave', onHighlightMouseLeave);
+    });
 
     return true; // No errors. 'undefined' is returned by default if any error occurs during this method's execution, like if 'content.replace' fails by 'content' being 'undefined'
+}
+
+function onHighlightMouseEnterOrClick() {
+    console.log("Hello from onHighlightMouseEnterOrClick")
+}
+
+function onHighlightMouseLeave() {
+    console.log("Hello from onHighlightMouseLeave")
 }
 
 function recursiveWrapper(container, highlightInfo) {
