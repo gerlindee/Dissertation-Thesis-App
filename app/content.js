@@ -45,7 +45,7 @@ function highlightSelection(selectionString, container, selection, colour) {
     if (selection.removeAllRanges) selection.removeAllRanges();
 
     // Step 4:
-    // const parent = $(container).parent();
+    // const parent = highlightInfo.container.parent();
     // parent.find(`.${HIGHLIGHT_CLASS}`).each((i, el) => {
     //     el.addEventListener('mouseenter', onHighlightMouseEnterOrClick);
     //     el.addEventListener('click', onHighlightMouseEnterOrClick);
