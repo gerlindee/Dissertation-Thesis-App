@@ -1,21 +1,23 @@
+// Global Variables declaration
+let isPermanentModeEnabled = false
+let toneColours = {
+    positiveTone: "#FFFFFF",
+    negativeTone: "#FFFFFF",
+    neutralTone:  "#FFFFFF"
+}
+const defaults = {
+    positiveTone: "#A7C957",
+    negativeTone: "#BC4749",
+    neutralTone:  "#F2E8CF",
+
+    accPositiveTone: "#F7B801",
+    accNegativeTone: "#7678ED",
+    accNeutralTone:  "#F2E8CF"
+}
+
 window.onload = function () {
     initialiseEventHandlers()
     initialiseSettings()
-}
-
-const settings = {
-    isPermanentModeEnabled: false,
-    positiveToneColour: "#FFFFFF",
-    negativeToneColour: "#FFFFFF",
-    neutralToneColour: "#FFFFFF",
-
-    defaultPosTone: "#A7C957",
-    defaultNegTone: "#BC4749",
-    defaultNeutralTone: "#F2E8CF",
-
-    defaultAccPos: "#F7B801",
-    defaultAccNeg: "#7678ed",
-    defaultAccNeutral: "#F2E8CF",
 }
 
 function initialiseEventHandlers() {
@@ -74,7 +76,7 @@ function initialisePositiveToneColour() {
         if (res.positiveToneColour !== undefined) {
             handlePositiveToneColourChange(res.positiveToneColour)
         } else {
-            handlePositiveToneColourChange(settings.defaultPosTone) // default positive colour
+            handlePositiveToneColourChange(defaults.positiveTone)
         }
     })
 }
@@ -84,7 +86,7 @@ function initialiseNegativeToneColour() {
         if (res.negativeToneColour !== undefined) {
             handleNegativeToneColourChange(res.negativeToneColour)
         } else {
-            handleNegativeToneColourChange(settings.defaultNegTone) // default negative colour
+            handleNegativeToneColourChange(defaults.negativeTone) // default negative colour
         }
     })
 }
@@ -94,48 +96,48 @@ function initialiseNeutralToneColour() {
         if (res.neutralToneColour !== undefined) {
             handleNeutralToneColourChange(res.neutralToneColour)
         } else {
-            handleNeutralToneColourChange(settings.defaultNeutralTone)
+            handleNeutralToneColourChange(defaults.neutralTone)
         }
     })
 }
 
 function handlePermanentModeChangeEvent(value) {
-    settings.isPermanentModeEnabled = value;
+    isPermanentModeEnabled = value;
     document.getElementById("check_permanent_mode").checked = value;
 }
 
 function handlePositiveToneColourChange(value) {
-    settings.positiveToneColour = value
+    toneColours.positiveTone = value
     document.getElementById("colour_theme_pos").value = value
 }
 
 function handleNegativeToneColourChange(value) {
-    settings.negativeToneColour = value
+    toneColours.negativeTone = value
     document.getElementById("colour_theme_neg").value = value
 }
 
 function handleNeutralToneColourChange(value) {
-    settings.neutralToneColour = value
+    toneColours.neutralTone = value
     document.getElementById("colour_theme_gen").value = value
 }
 
-function handleColourReset(acc_mode) {
-    if (acc_mode === true) {
-        settings.positiveToneColour = settings.defaultAccPos
-        settings.negativeToneColour = settings.defaultAccNeg
-        settings.neutralToneColour = settings.defaultAccNeutral
+function handleColourReset(accMode) {
+    if (accMode === true) {
+        toneColours.positiveTone = defaults.accPositiveTone
+        toneColours.negativeTone = defaults.accNegativeTone
+        toneColours.neutralTone  = defaults.accNeutralTone
     } else {
-        settings.positiveToneColour = settings.defaultPosTone
-        settings.negativeToneColour = settings.defaultNegTone
-        settings.neutralToneColour = settings.defaultNeutralTone
+        toneColours.positiveTone = defaults.positiveTone
+        toneColours.negativeTone = defaults.negativeTone
+        toneColours.neutralTone  = defaults.neutralTone
     }
 
-    handlePositiveToneColourChange(settings.positiveToneColour)
-    chrome.storage.sync.set({ positiveToneColour: settings.positiveToneColour })
+    handlePositiveToneColourChange(toneColours.positiveTone)
+    chrome.storage.sync.set({ positiveToneColour: toneColours.positiveTone })
 
-    handleNegativeToneColourChange(settings.negativeToneColour)
-    chrome.storage.sync.set({ negativeToneColour: settings.negativeToneColour })
+    handleNegativeToneColourChange(toneColours.negativeTone)
+    chrome.storage.sync.set({ negativeToneColour: toneColours.negativeTone })
 
-    handleNeutralToneColourChange(settings.neutralToneColour)
-    chrome.storage.sync.set({ neutralToneColour: settings.neutralToneColour })
+    handleNeutralToneColourChange(toneColours.neutralTone)
+    chrome.storage.sync.set({ neutralToneColour: toneColours.neutralTone })
 }

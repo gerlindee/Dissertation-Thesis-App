@@ -1,12 +1,16 @@
-const settings = {
-    isPermanentModeEnabled: false,
-    positiveToneColour: "#FFFFFF",
-    negativeToneColour: "#FFFFFF",
-    neutralToneColour: "#FFFFFF",
+let toneColours = {
+    positiveTone: "#FFFFFF",
+    negativeTone: "#FFFFFF",
+    neutralTone:  "#FFFFFF"
+}
+const defaults = {
+    positiveTone: "#A7C957",
+    negativeTone: "#BC4749",
+    neutralTone:  "#F2E8CF",
 
-    defaultPosTone: "#A7C957",
-    defaultNegTone: "#BC4749",
-    defaultNeutralTone: "#F2E8CF",
+    accPositiveTone: "#F7B801",
+    accNegativeTone: "#7678ED",
+    accNeutralTone:  "#F2E8CF"
 }
 
 chrome.runtime.onInstalled.addListener(function () {
@@ -25,23 +29,31 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
     if (info.menuItemId === "text_select") {
-        if (settings.positiveToneColour === "#FFFFFF" &&
-            settings.negativeToneColour === "#FFFFFF" &&
-            settings.neutralToneColour === "#FFFFFF") {
+        chrome.storage.sync.get(["positiveToneColour"], (res) => {
+            if (res.positiveToneColour !== undefined) {
+                toneColours.positiveTone = res.positiveToneColour
+            } else {
+                toneColours.positiveTone = defaults.positiveTone
+            }
 
-            chrome.storage.sync.get(["positiveToneColour"], (res) => {
-                if (res.positiveToneColour !== undefined) {
-                    settings.positiveToneColour = res.positiveToneColour
+            chrome.storage.sync.get(["negativeToneColour"], (res) => {
+                if (res.negativeToneColour !== undefined) {
+                    toneColours.negativeTone = res.negativeToneColour
                 } else {
-                    settings.positiveToneColour = settings.defaultPosTone
+                    toneColours.negativeTone = defaults.negativeTone
                 }
 
-                callHighlightingScript(tab, settings.positiveToneColour)
-            })
-        } else {
-            callHighlightingScript(tab, settings.negativeToneColour)
-        }
+                chrome.storage.sync.get(["neutralToneColour"], (res) => {
+                    if (res.neutralToneColour !== undefined) {
+                        toneColours.neutralTone = res.neutralToneColour
+                    } else {
+                        toneColours.neutralTone = defaults.neutralTone
+                    }
 
+                    callHighlightingScript(tab, toneColours.positiveTone)
+                })
+            })
+        })
     }
 
     if (info.menuItemId === "image_select") {

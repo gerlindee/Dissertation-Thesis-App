@@ -1,17 +1,37 @@
+main()
+
+function main() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        let result = true
+        if (message.action === "highlight_selection") {
+            result = highlightSelectedElement(message.colour)
+        }
+        if (result === true) {
+            sendResponse({ status: 'OK' });
+        } else {
+            alert("Could not highlight selected area!")
+            sendResponse({ status: "NOK"})
+        }
+    });
+}
+
 function highlightSelectedElement(colour) {
     const selection = window.getSelection();
     const selectionString = selection.toString();
 
-    if (selectionString) { // If there is text selected
+    if (selectionString) { // If there is any text selected
         let container = selection.getRangeAt(0).commonAncestorContainer;
 
-        // Sometimes the element will only be text. Get the parent in that case
+        // Sometimes the element will only be text => Get the uppermost parent container in that case
         while (!container.innerHTML) {
             container = container.parentNode;
         }
 
-        highlightSelection(selectionString, container, selection, colour);
+        return highlightSelection(selectionString, container, selection, colour);
+    } else {
+        return true
     }
+
 }
 
 function highlightSelection(selectionString, container, selection, colour) {
@@ -25,27 +45,19 @@ function highlightSelection(selectionString, container, selection, colour) {
         focusOffset: selection.focusOffset,
     };
 
-    /**
-     * STEPS:
-     * 1 - Use the offset of the anchor/focus to find the start of the selected text in the anchor/focus element
-     *     - Use the first of the anchor of the focus elements to appear
-     * 2 - From there, go through the elements and find all Text Nodes until the selected text is all found.
-     *     - Wrap all the text nodes (or parts of them) in a span DOM element with special highlight class name and bg color
-     * 3 - Deselect text
-     * 4 - Attach mouse hover event listeners to display tools when hovering a highlight
-     */
-
-    // Step 1 + 2:
+    // Step 1: Use the offset of the anchor/focus to find the start of the selected text in the anchor/focus element
+    //         From there, go through the elements and find all Text Nodes until the selected text is all found.
+    //         Wrap all the text nodes (or parts of them) in a span DOM element with special highlight class name and bg color
     try {
         recursiveWrapper($(container), highlightInfo);
     } catch (e) {
         return false;
     }
 
-    // Step 3:
+    // Step 2: Deselect text
     if (selection.removeAllRanges) selection.removeAllRanges();
 
-    // Step 4:
+    // Step 3: Attach mouse hover event listeners to display the delete button when hovering over a highlight
     const parent = highlightInfo.container.parent();
     const HIGHLIGHT_CLASS = 'highlighter--highlighted'; /* eslint-disable-line no-redeclare */
     parent.find(`.${HIGHLIGHT_CLASS}`).each((i, el) => {
@@ -53,7 +65,8 @@ function highlightSelection(selectionString, container, selection, colour) {
         el.addEventListener('mouseleave', onHighlightMouseLeave);
     });
 
-    return true; // No errors. 'undefined' is returned by default if any error occurs during this method's execution, like if 'content.replace' fails by 'content' being 'undefined'
+    // If we made it until here => Text was highlighted successfully
+    return true;
 }
 
 function onHighlightMouseEnterOrClick() {
@@ -65,7 +78,8 @@ function onHighlightMouseLeave() {
 }
 
 function recursiveWrapper(container, highlightInfo) {
-    return _recursiveWrapper(container, highlightInfo, false, 0); // Initialize the values of 'startFound' and 'charsHighlighted'
+    // Initialize the values of 'startFound' and 'charsHighlighted'
+    return _recursiveWrapper(container, highlightInfo, false, 0);
 }
 
 function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighted) {
@@ -73,11 +87,11 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
     const selectionLength = selectionString.length;
 
     container.contents().each((_index, element) => {
-        if (charsHighlighted >= selectionLength) return; // Stop early if we are done highlighting
+        // Stop early if we are done highlighting
+        if (charsHighlighted >= selectionLength) return;
 
         if (element.nodeType !== Node.TEXT_NODE) {
             // Only look at visible nodes because invisible nodes aren't included in the selected text
-            // from the Window.getSelection() API
             const jqElement = $(element);
             if (jqElement.is(':visible') && getComputedStyle(element).visibility !== 'hidden') {
                 [startFound, charsHighlighted] = _recursiveWrapper(jqElement, highlightInfo, startFound, charsHighlighted);
@@ -85,12 +99,13 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
             return;
         }
 
-        // Step 1:
-        // The first element to appear could be the anchor OR the focus node,
-        // since you can highlight from left to right or right to left
+        // Step 1: The first element to appear could be the anchor OR the focus node, since you can highlight from left to right or right to left
         let startIndex = 0;
         if (!startFound) {
-            if (!anchor.is(element) && !focus.is(element)) return; // If the element is not the anchor or focus, continue
+            // If the element is not the anchor or focus, continue
+            if (!anchor.is(element) && !focus.is(element)) {
+                return;
+            }
 
             startFound = true;
             startIndex = Math.min(...[
@@ -99,42 +114,43 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
             ]);
         }
 
-        // Step 2:
-        // If we get here, we are in a text node, the start was found and we are not done highlighting
+        // Step 2: If we get here, we are in a text node, the start was found, and we are not done highlighting
         const { nodeValue, parentElement: parent } = element;
 
         if (startIndex > nodeValue.length) {
             // Start index is beyond the length of the text node, can't find the highlight
-            // NOTE: we allow the start index to be equal to the length of the text node here just in case
             throw new Error(`No match found for highlight string '${selectionString}'`);
         }
 
-        // Split the text content into three parts, the part before the highlight, the highlight and the part after the highlight:
+        // Split the text content into three parts: the part before the highlight, the highlight and the part after the highlight
         const highlightTextEl = element.splitText(startIndex);
 
-        // Instead of simply blindly highlighting the text by counting characters,
-        // we check if the text is the same as the selection string.
+        // Instead of simply highlighting the text by counting characters, we check if the text is the same as the selection string
         let i = startIndex;
         for (; i < nodeValue.length; i++) {
-            // Skip any whitespace characters in the selection string as there can
-            // be more than in the text node:
-            while (charsHighlighted < selectionLength && selectionString[charsHighlighted].match(/\s/u)) charsHighlighted++;
+            // Skip any whitespace characters in the selection string as there can be more than in the text node:
+            while (charsHighlighted < selectionLength && selectionString[charsHighlighted].match(/\s/u)) {
+                charsHighlighted++;
+            }
 
-            if (charsHighlighted >= selectionLength) break;
+            if (charsHighlighted >= selectionLength) {
+                break;
+            }
 
             const char = nodeValue[i];
             if (char === selectionString[charsHighlighted]) {
                 charsHighlighted++;
             } else if (!char.match(/\s/u)) { // FIXME: Here, this is where the issue happens
                 // Similarly, if the char in the text node is a whitespace, ignore any differences
-                // Otherwise, we can't find the highlight text; throw an error
+                // Otherwise, we can't find the highlight text => Throw an error
                 throw new Error(`No match found for highlight string '${selectionString}'`);
             }
         }
 
-        // If textElement is wrapped in a .highlighter--highlighted span, do not add this highlight
-        // as it is already highlighted, but still count the number of charsHighlighted
-        if (parent.classList.contains('highlighter--highlighted')) return;
+        // If the text element is wrapped in a .highlighter--highlighted spann => Text is already highlighted, still count the number of charsHighlighted
+        if (parent.classList.contains('highlighter--highlighted')) {
+            return;
+        }
 
         const elementCharCount = i - startIndex; // Number of chars to highlight in this particular element
         const insertBeforeElement = highlightTextEl.splitText(elementCharCount);
@@ -146,8 +162,7 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
             return;
         }
 
-        // If we get here, highlight!
-        // Wrap the highlighted text in a span with the highlight class name
+        // If we get here, wrap the highlighted text in a span with the highlight class name
         const highlightNode = document.createElement('span');
         highlightNode.classList.add((color === 'inherit') ? 'highlighter--deleted' : 'highlighter--highlighted');
         highlightNode.style.backgroundColor = color;
@@ -158,15 +173,3 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
 
     return [startFound, charsHighlighted];
 }
-
-function main() {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.action === "highlight_selection") {
-            highlightSelectedElement(message.colour)
-        }
-        sendResponse({ status: 'OK' });
-    });
-}
-
-main()
-
