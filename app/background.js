@@ -3,6 +3,7 @@ let toneColours = {
     negativeTone: "#FFFFFF",
     neutralTone:  "#FFFFFF"
 }
+
 const defaults = {
     positiveTone: "#A7C957",
     negativeTone: "#BC4749",
@@ -12,6 +13,8 @@ const defaults = {
     accNegativeTone: "#7678ED",
     accNeutralTone:  "#F2E8CF"
 }
+
+let highlightIndex = 1;
 
 chrome.runtime.onInstalled.addListener(function () {
     chrome.contextMenus.create({
@@ -51,6 +54,8 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
                     }
 
                     callHighlightingScript(tab, toneColours.positiveTone)
+
+                    highlightIndex++
                 })
             })
         })
@@ -68,7 +73,8 @@ function callHighlightingScript(tab, colour) {
     }, function () {
         chrome.tabs.sendMessage(tab.id, {
             action: "highlight_selection",
-            colour: colour
+            colour: colour,
+            highlightIndex: highlightIndex
         })
     })
 }

@@ -24,6 +24,9 @@
         "/utils/highlightUtils.js",
         "content.js"
       ],
+      "css": [
+        "/utils/highlightHover.css"
+      ],
       "all_frames": false
     }
   ],
@@ -44,5 +47,17 @@
     "scripting",
     "tabs",
     "contextMenus"
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "resources": [
+        "images/*.png",
+        "images/*.svg",
+        "/utils/highlightHover.html"
+      ]
+    }
   ]
 }

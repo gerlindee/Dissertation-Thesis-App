@@ -1,4 +1,4 @@
-function highlightSelectedElement(colour) {
+function highlightSelectedElement(colour, highlightIndex) {
     const selection = window.getSelection();
     const selectionString = selection.toString();
 
@@ -10,16 +10,19 @@ function highlightSelectedElement(colour) {
             container = container.parentNode;
         }
 
-        return highlightSelection(selectionString, container, selection, colour);
+        return highlightSelection(selectionString, container, selection, colour, highlightIndex);
     } else {
         return true
     }
 }
 
-function highlightSelection(selectionString, container, selection, colour) {
+function highlightSelection(selectionString, container, selection, colour, highlightIndex) {
+
     const highlightInfo = {
         color: colour,
         selectionString: selectionString,
+        selectionLength: selectionString.length,
+        highlightIndex: highlightIndex,
         anchor: $(selection.anchorNode),
         anchorOffset: selection.anchorOffset,
         container: $(container),
@@ -41,7 +44,7 @@ function highlightSelection(selectionString, container, selection, colour) {
 
     // Step 3: Attach mouse hover event listeners to display the delete button when hovering over a highlight
     const parent = highlightInfo.container.parent();
-    const HIGHLIGHT_CLASS = 'highlighter--highlighted'; /* eslint-disable-line no-redeclare */
+    const HIGHLIGHT_CLASS = 'highlighter--highlighted';
     parent.find(`.${HIGHLIGHT_CLASS}`).each((i, el) => {
         el.addEventListener('mouseenter', onHighlightMouseEnterOrClick);
         el.addEventListener('mouseleave', onHighlightMouseLeave);
@@ -93,6 +96,7 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
 
         if (startIndex > nodeValue.length) {
             // Start index is beyond the length of the text node, can't find the highlight
+            debugger
             throw new Error(`No match found for highlight string '${selectionString}'`);
         }
 
@@ -117,6 +121,7 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
             } else if (!char.match(/\s/u)) { // FIXME: Here, this is where the issue happens
                 // Similarly, if the char in the text node is a whitespace, ignore any differences
                 // Otherwise, we can't find the highlight text => Throw an error
+                debugger
                 throw new Error(`No match found for highlight string '${selectionString}'`);
             }
         }
@@ -139,6 +144,7 @@ function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighte
         highlightNode.classList.add((color === 'inherit') ? 'highlighter--deleted' : 'highlighter--highlighted');
         highlightNode.style.backgroundColor = color;
         highlightNode.textContent = highlightTextEl.nodeValue;
+        highlightNode.dataset.highlightId = "1";
         highlightTextEl.remove();
         parent.insertBefore(highlightNode, insertBeforeElement);
     });
