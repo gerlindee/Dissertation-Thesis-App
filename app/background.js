@@ -54,8 +54,6 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
                     }
 
                     callHighlightingScript(tab, toneColours.positiveTone)
-
-                    highlightIndex++
                 })
             })
         })
@@ -76,5 +74,7 @@ function callHighlightingScript(tab, colour) {
             colour: colour,
             highlightIndex: highlightIndex
         })
+
+        highlightIndex++
     })
 }

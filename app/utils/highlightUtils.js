@@ -33,11 +33,7 @@ function highlightSelection(selectionString, container, selection, colour, highl
     // Step 1: Use the offset of the anchor/focus to find the start of the selected text in the anchor/focus element
     //         From there, go through the elements and find all Text Nodes until the selected text is all found.
     //         Wrap all the text nodes (or parts of them) in a span DOM element with special highlight class name and bg color
-    try {
-        recursiveWrapper($(container), highlightInfo);
-    } catch (e) {
-        return false;
-    }
+    recursiveWrapper(highlightInfo)
 
     // Step 2: Deselect text
     if (selection.removeAllRanges) selection.removeAllRanges();
@@ -54,99 +50,95 @@ function highlightSelection(selectionString, container, selection, colour, highl
     return true;
 }
 
-function recursiveWrapper(container, highlightInfo) {
+function recursiveWrapper(highlightInfo) {
     // Initialize the values of 'startFound' and 'charsHighlighted'
-    return _recursiveWrapper(container, highlightInfo, false, 0);
+    return _recursiveWrapper(highlightInfo, false, 0);
 }
 
-function _recursiveWrapper(container, highlightInfo, startFound, charsHighlighted) {
-    const {anchor, focus, anchorOffset, focusOffset, color, selectionString} = highlightInfo;
-    const selectionLength = selectionString.length;
+function _recursiveWrapper(highlightInfo, startFound, charsHighlighted) {
+    const { container, anchor, focus, anchorOffset, focusOffset, color, textColor, highlightIndex, selectionString, selectionLength } = highlightInfo;
 
-    container.contents().each((_index, element) => {
-        // Stop early if we are done highlighting
-        if (charsHighlighted >= selectionLength) return;
+    container.contents().each((index, element) => {
+        if (charsHighlighted >= selectionLength) return; // Stop early if we are done highlighting
 
-        if (element.nodeType !== Node.TEXT_NODE) {
-            // Only look at visible nodes because invisible nodes aren't included in the selected text
-            const jqElement = $(element);
-            if (jqElement.is(':visible') && getComputedStyle(element).visibility !== 'hidden') {
-                [startFound, charsHighlighted] = _recursiveWrapper(jqElement, highlightInfo, startFound, charsHighlighted);
-            }
-            return;
-        }
+        if (element.nodeType === Node.TEXT_NODE) {
+            let startIndex = 0;
 
-        // Step 1: The first element to appear could be the anchor OR the focus node, since you can highlight from left to right or right to left
-        let startIndex = 0;
-        if (!startFound) {
-            // If the element is not the anchor or focus, continue
-            if (!anchor.is(element) && !focus.is(element)) {
-                return;
-            }
-
-            startFound = true;
-            startIndex = Math.min(...[
-                ...(anchor.is(element) ? [anchorOffset] : []),
-                ...(focus.is(element) ? [focusOffset] : []),
-            ]);
-        }
-
-        // Step 2: If we get here, we are in a text node, the start was found, and we are not done highlighting
-        const {nodeValue, parentElement: parent} = element;
-
-        if (startIndex > nodeValue.length) {
-            // Start index is beyond the length of the text node, can't find the highlight
-            debugger
-            throw new Error(`No match found for highlight string '${selectionString}'`);
-        }
-
-        // Split the text content into three parts: the part before the highlight, the highlight and the part after the highlight
-        const highlightTextEl = element.splitText(startIndex);
-
-        // Instead of simply highlighting the text by counting characters, we check if the text is the same as the selection string
-        let i = startIndex;
-        for (; i < nodeValue.length; i++) {
-            // Skip any whitespace characters in the selection string as there can be more than in the text node:
-            while (charsHighlighted < selectionLength && selectionString[charsHighlighted].match(/\s/u)) {
-                charsHighlighted++;
+            // Step 1:
+            // The first element to appear could be the anchor OR the focus node,
+            // since you can highlight from left to right or right to left
+            if (!startFound) {
+                if (anchor.is(element)) {
+                    startFound = true;
+                    startIndex = anchorOffset;
+                }
+                if (focus.is(element)) {
+                    if (startFound) { // If the anchor and the focus elements are the same, use the smallest index
+                        startIndex = Math.min(anchorOffset, focusOffset);
+                    } else {
+                        startFound = true;
+                        startIndex = focusOffset;
+                    }
+                }
             }
 
-            if (charsHighlighted >= selectionLength) {
-                break;
+            // Step 2:
+            if (startFound && charsHighlighted < selectionLength) {
+                const nodeValue = element.nodeValue;
+                const nodeValueLength = element.nodeValue.length;
+                const parent = element.parentElement;
+
+                let firstSplitTextEl = null;
+                let firstSplitIndex = -1;
+                let secondSplitTextEl = null;
+
+                // Go over all characters to see if they match the selection.
+                // This is done because the selection text and node text contents differ.
+                for (let i = 0; i < nodeValueLength; i++) {
+                    if (i === startIndex) {
+                        firstSplitTextEl = element.splitText(i);
+                        firstSplitIndex = i;
+                    }
+                    if (charsHighlighted === selectionLength) {
+                        secondSplitTextEl = firstSplitTextEl.splitText(i - firstSplitIndex);
+                        break;
+                    }
+
+                    if (i >= startIndex && charsHighlighted < selectionLength) {
+                        // Skip whitespaces as they often cause trouble (differences between selection and actual text)
+                        while (charsHighlighted < selectionLength && selectionString[charsHighlighted].match(/\s/u)) {
+                            charsHighlighted++;
+                        }
+
+                        if (selectionString[charsHighlighted] === nodeValue[i]) {
+                            charsHighlighted++;
+                        }
+                    }
+                }
+
+                // If textElement is wrapped in a .highlighter--highlighted span, do not add this highlight
+                if (parent.classList.contains('highlighter--highlighted')) {
+                    parent.normalize(); // Undo any 'splitText' operations
+                    return;
+                }
+
+                if (firstSplitTextEl) {
+                    const highlightNode = document.createElement('span');
+                    highlightNode.classList.add((color === 'inherit') ? 'highlighter--deleted' : 'highlighter--highlighted');
+                    highlightNode.style.backgroundColor = color;
+                    highlightNode.style.color = textColor;
+                    highlightNode.dataset.highlightId = highlightIndex;
+                    highlightNode.textContent = firstSplitTextEl.nodeValue;
+
+                    firstSplitTextEl.remove();
+                    const insertBeforeElement = secondSplitTextEl || element.nextSibling;
+                    parent.insertBefore(highlightNode, insertBeforeElement);
+                }
             }
-
-            const char = nodeValue[i];
-            if (char === selectionString[charsHighlighted]) {
-                charsHighlighted++;
-            } else if (!char.match(/\s/u)) { // FIXME: Here, this is where the issue happens
-                // Similarly, if the char in the text node is a whitespace, ignore any differences
-                // Otherwise, we can't find the highlight text => Throw an error
-                debugger
-                throw new Error(`No match found for highlight string '${selectionString}'`);
-            }
+        } else {
+            highlightInfo.container = $(element);
+            [startFound, charsHighlighted] = _recursiveWrapper(highlightInfo, startFound, charsHighlighted);
         }
-
-        // If the text element is wrapped in a .highlighter--highlighted span => Text is already highlighted, but still count the number of characters highlighted
-        if (parent.classList.contains('highlighter--highlighted')) return;
-
-        const elementCharCount = i - startIndex; // Number of chars to highlight in this particular element
-        const insertBeforeElement = highlightTextEl.splitText(elementCharCount);
-        const highlightText = highlightTextEl.nodeValue;
-
-        // If the text is all whitespace, ignore it
-        if (highlightText.match(/^\s*$/u)) {
-            parent.normalize(); // Undo any 'splitText' operations
-            return;
-        }
-
-        // If we get here => Wrap the highlighted text in a span with the highlight class name
-        const highlightNode = document.createElement('span');
-        highlightNode.classList.add((color === 'inherit') ? 'highlighter--deleted' : 'highlighter--highlighted');
-        highlightNode.style.backgroundColor = color;
-        highlightNode.textContent = highlightTextEl.nodeValue;
-        highlightNode.dataset.highlightId = "1";
-        highlightTextEl.remove();
-        parent.insertBefore(highlightNode, insertBeforeElement);
     });
 
     return [startFound, charsHighlighted];

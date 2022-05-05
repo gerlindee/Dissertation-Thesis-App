@@ -14,22 +14,6 @@ $.get(chrome.runtime.getURL('utils/highlightHover.html'), (data) => {
     deleteBtnEl.addEventListener('click', onDeleteBtnClicked);
 })
 
-function onDeleteBtnClicked() {
-    const highlightId = currentHighlightEl.getAttribute('data-highlight-id');
-    const highlights = $(`.highlighter--highlighted[data-highlight-id='${highlightId}']`);
-    $('.highlighter--hovered').removeClass('highlighter--hovered');
-    hoverToolEl.hide();
-    hoverToolTimeout = null;
-
-    highlights.css('backgroundColor', 'inherit'); // Change the background color attribute
-    highlights.removeClass('highlighter--highlighted').addClass('highlighter--deleted'); // Change the class name to the 'deleted' version
-
-    highlights.each((_, el) => { // Finally, remove the event listeners that were attached to this highlight element
-        el.removeEventListener('mouseenter', onHighlightMouseEnterOrClick);
-        el.removeEventListener('mouseleave', onHighlightMouseLeave);
-    });
-}
-
 // When clicking outside the selected text => Hide the hover toolbar
 window.addEventListener('click', (e) => {
     // Check if the click is done within the highlight
@@ -46,24 +30,12 @@ window.addEventListener("scroll", () => {
     }
 });
 
-function hide() {
-    $('.highlighter--hovered').removeClass('highlighter--hovered');
-    hoverToolEl.hide();
-    hoverToolTimeout = null;
-}
-
-function onHoverToolMouseEnter() {
-    if (hoverToolTimeout !== null) {
-        clearTimeout(hoverToolTimeout);
-        hoverToolTimeout = null;
-    }
-}
-
 function onHighlightMouseEnterOrClick(e) {
     isHoverClicked = true
 
     const newHighlightEl = e.target
     const newHighlightId = newHighlightEl.getAttribute('data-highlight-id')
+    console.log(newHighlightId)
 
     // Clear any previous timeout that would hide the toolbar
     if (hoverToolTimeout !== null) {
@@ -83,6 +55,13 @@ function onHighlightMouseEnterOrClick(e) {
     // Remove any previous borders and add a border to the highlight (by id) to clearly see what was selected
     $('.highlighter--hovered').removeClass('highlighter--hovered');
     $(`.highlighter--highlighted[data-highlight-id='${newHighlightId}']`).addClass('highlighter--hovered');
+}
+
+function onHighlightMouseLeave() {
+    if (isHoverClicked) {
+        isHoverClicked = false
+        hoverToolTimeout = setTimeout(hide, 170);
+    }
 }
 
 // cursorX is optional, in which case no change is made to the x position of the hover toolbar
@@ -115,9 +94,31 @@ function moveToolbarToHighlight(highlightEl, cursorX) {
     hoverToolEl.show();
 }
 
-function onHighlightMouseLeave() {
-    if (isHoverClicked) {
-        isHoverClicked = false
-        hoverToolTimeout = setTimeout(hide, 170);
+function hide() {
+    $('.highlighter--hovered').removeClass('highlighter--hovered');
+    hoverToolEl.hide();
+    hoverToolTimeout = null;
+}
+
+function onHoverToolMouseEnter() {
+    if (hoverToolTimeout !== null) {
+        clearTimeout(hoverToolTimeout);
+        hoverToolTimeout = null;
     }
+}
+
+function onDeleteBtnClicked() {
+    const highlightId = currentHighlightEl.getAttribute('data-highlight-id');
+    const highlights = $(`.highlighter--highlighted[data-highlight-id='${highlightId}']`);
+    $('.highlighter--hovered').removeClass('highlighter--hovered');
+    hoverToolEl.hide();
+    hoverToolTimeout = null;
+
+    highlights.css('backgroundColor', 'inherit'); // Change the background color attribute
+    highlights.removeClass('highlighter--highlighted').addClass('highlighter--deleted'); // Change the class name to the 'deleted' version
+
+    highlights.each((_, el) => { // Finally, remove the event listeners that were attached to this highlight element
+        el.removeEventListener('mouseenter', onHighlightMouseEnterOrClick);
+        el.removeEventListener('mouseleave', onHighlightMouseLeave);
+    });
 }
