@@ -15,36 +15,31 @@
 
 <!--Header, with the application logo and motto-->
 <div class="popup_header">
-    <img src="../images/gen_text.png" alt="/GEN">
+    <img id="app_icon_text" src="../images/gen_text.png" alt="/GEN">
     <h1> It's Not What You Say, It's How You Say It </h1>
 </div>
 
 <!--Body, with the user settings and the information page link -->
 <div class="popup_body">
     <hr/>
-    <div class="grid_permanent">
-        <h1>Permanent Mode</h1>
-        <label class="switch">
-            <input id="check_permanent_mode" type="checkbox">
-            <span class="slider round"></span>
-        </label>
+    <div class="grid_colour_theme">
+        <h1> Colour Theme </h1>
+        <label> Positive Tone <input id="colour_theme_pos" style="margin-left: 16px;" type="color"> </label>
+        <br> <br>
+        <label> Negative Tone <input id="colour_theme_neg" style="margin-left: 11px;" type="color"> </label>
+        <br> <br>
+        <label> Neutral Tone  <input id="colour_theme_gen" style="margin-left: 20px;" type="color"> </label>
+        <br>
     </div>
 
     <hr/>
-    <div>
-        <button id="colours_btn" class="colours_btn">Colour Theme </button>
-        <br> <br>
-        <label> Positive <input id="colour_theme_pos" style="margin-left: 16px;" type="color"> </label>
-        <br> <br>
-        <label> Negative <input id="colour_theme_neg" style="margin-left: 12px;" type="color"> </label>
-        <br> <br>
-        <label> Neutral <input id="colour_theme_gen" style="margin-left: 18px;" type="color"> </label>
+    <div class="grid_reset">
+        <button id="reset_colours" class="colours_btn"> Reset Colour Theme to Default </button>
+    </div>
 
-        <br> <br>
-        <button id="reset_colours" class="colours_btn"> Reset Colour Theme</button>
-
-        <br> <br>
-        <button id="switch_acc_colours" class="colours_btn"> Switch to Accessible Colours </button>
+    <hr/>
+    <div class="grid_reset">
+        <button id="set_accessibility_colours" class="colours_btn"> Enable Colour Blind Friendly Mode </button>
     </div>
 
     <script src="popup.js"></script>
