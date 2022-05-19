@@ -1,6 +1,25 @@
 from logistic_regression import LogisticRegression
+from flask import *
+
+app = Flask(__name__)
 
 
-tester = LogisticRegression()
-tester.load()
-print(tester.predict_text_polarity(input("Your text here: ")))
+@app.route('/')
+def home():
+    output = '<h1>' + classifier.predict_text_polarity("Hello have a good day") + '</h1>'
+    return output
+
+
+@app.route('/api/get_text_polarity', methods=['GET'])
+def add():
+    data_json = request.get_json()
+    text = data_json['text']
+    text_polarity = classifier.predict_text_polarity(text)
+    print(text_polarity)
+    return jsonify({"polarity": text_polarity})
+
+
+classifier = LogisticRegression()
+classifier.load()
+app.run()
+
