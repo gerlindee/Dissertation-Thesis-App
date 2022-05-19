@@ -53,10 +53,41 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
                         toneColours.neutralTone = defaults.neutralTone
                     }
 
-                    callHighlightingScript(tab, toneColours.positiveTone)
-                })
-            })
-        })
+                    console.log(info.selectionText);
+
+                    (async () => {
+                        const rawResponse = await fetch('http://127.0.0.1:5000/api/get_text_polarity', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({text: info.selectionText})
+                        });
+                        const content = await rawResponse.json();
+                        const textPolarity = content['polarity'];
+
+                        let highlightColour;
+                        switch (textPolarity) {
+                            case 'POSITIVE':
+                                highlightColour = toneColours.positiveTone;
+                                break;
+                            case 'NEUTRAL':
+                                highlightColour = toneColours.neutralTone;
+                                break;
+                            case 'NEGATIVE':
+                                highlightColour = toneColours.negativeTone;
+                                break;
+                            default:
+                                highlightColour = toneColours.neutralTone;
+                        }
+
+                        callHighlightingScript(tab, highlightColour)
+
+                    })();
+                });
+            });
+        });
     }
 
     if (info.menuItemId === "image_select") {

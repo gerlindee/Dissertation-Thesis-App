@@ -10,13 +10,12 @@ def home():
     return output
 
 
-@app.route('/api/get_text_polarity', methods=['GET'])
+@app.route('/api/get_text_polarity', methods=['POST'])
 def add():
     data_json = request.get_json()
     text = data_json['text']
     text_polarity = classifier.predict_text_polarity(text)
-    print(text_polarity)
-    return jsonify({"polarity": text_polarity})
+    return jsonify({'polarity': text_polarity})
 
 
 classifier = LogisticRegression()
