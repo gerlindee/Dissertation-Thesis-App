@@ -1,4 +1,5 @@
 from logistic_regression import LogisticRegression
+from naive_bayes import NaiveBayes
 from flask import *
 
 app = Flask(__name__)
@@ -15,11 +16,11 @@ def add():
     data_json = request.get_json()
     text = data_json['text']
     text_polarity = classifier.predict_text_polarity(text)
+    print(text_polarity)
     return jsonify({'polarity': text_polarity})
 
 
 classifier = LogisticRegression()
 classifier.load()
-print(classifier.test_logistic_regression())
-# app.run()
+app.run()
 

@@ -112,7 +112,7 @@ class LogisticRegression:
         result_file.write("\n")
         result_file.close()
 
-    def test_logistic_regression(self):
+    def test_model(self):
         """
         Test the accuracy of the trained logistic regression algorithm
         :return: accuracy: The accuracy of the algorithm, calculated as being the proportion of correctly calculated tweets out of the entire sample size

@@ -3,3 +3,7 @@ train_y.shape = (8000, 1)
 Word Frequency Dictionary size: 11338
 The cost after training is 0.24215474.
 The resulting vector of weights is [7e-08, 0.00052391, -0.00055517]
+Naive Bayes Regression Training - 2022-05-22 23:16:12
+train_y.shape = (8000, 1)
+Word Frequency Dictionary size: 11338
+
