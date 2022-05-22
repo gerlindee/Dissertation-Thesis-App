@@ -1,6 +1,5 @@
 Logistic Regression Training - 2022-05-18 22:20:05
 train_y.shape = (8000, 1)
-test_y.shape  = (2000, 1)
 Word Frequency Dictionary size: 11338
 The cost after training is 0.24215474.
 The resulting vector of weights is [7e-08, 0.00052391, -0.00055517]

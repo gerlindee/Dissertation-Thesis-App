@@ -1,0 +1,4 @@
+Logistic Regression Testing - 2022-05-22 21:26:28
+test_y.shape = (2000, 1)
+The weights used for prediction is [7e-08, 0.00052391, -0.00055517]
+Accuracy: 0.995

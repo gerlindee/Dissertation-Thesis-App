@@ -1,95 +1,14 @@
-import re
-import string
 import pickle
-import nltk, ssl
-from nltk.corpus import stopwords, twitter_samples
-from nltk.stem import PorterStemmer
-from nltk.tokenize import TweetTokenizer
+from nltk.corpus import twitter_samples
 import numpy as np
 import datetime
+from utils import preprocess_text, build_word_freq_dict
 
 
 class LogisticRegression:
     def __init__(self):
         self.__word_freqs = {}
-
         self.__theta = 0
-
-    @staticmethod
-    def __download_nltk_samples():
-        """
-        Download the Twitter Sample json files, as well as the Stopwords json files, into the project structure
-        """
-
-        # In order to download the files, we need to generate an SSL certificate -> Otherwise the download methods will fail
-        try:
-            _create_unverified_https_context = ssl._create_unverified_context
-        except AttributeError:
-            pass
-        else:
-            ssl._create_default_https_context = _create_unverified_https_context
-
-        nltk.download('twitter_sample')
-        nltk.download('stopwords')
-
-    @staticmethod
-    def __preprocess_text(text):
-        """
-        Preprocess the given text, removing URLs, Links, Retweets and Hashtags, ignoring stopwords and punctuation, and stemming each word
-        :param string text: The text to be preprocessed
-        :return []: A list of all tokens from the input string
-        """
-        # Remove Twitter Stock Market Tickers like $GE
-        text = re.sub(r'\$\w*', '', text)
-
-        # Remove Retweet text like "RT"
-        text = re.sub(r'^RT[\s]+', '', text)
-
-        # Remove Hyperlinks
-        text = re.sub(r'https?:\/\/.*[\r\n]*', '', text)
-
-        # Remove the Hashtag symbol -> Hashtag keywords are still kept, only # symbol is removed
-        text = re.sub(r'#', '', text)
-
-        # Use the Tweet Tokenizer to split the text into tokens
-        #       - preserve_case: Flag indicating whether to preserve the capitalisation of the text
-        #       - strip_handles: Flag indicating whether to remove Twitter handles in the text
-        #       - reduce_len: Flag indicating whether to replace repeated character sequences of length 3 or greater with sequences of length 3
-        tokenizer = TweetTokenizer(preserve_case=False, strip_handles=True, reduce_len=True)
-        text_tokens = tokenizer.tokenize(text)
-
-        stopwords_english = stopwords.words('english')
-        stemmer = PorterStemmer()
-
-        # Remove stop words and punctuation
-        text_clean = []
-        for word in text_tokens:
-            if word not in stopwords_english and word not in string.punctuation:
-                text_clean.append(stemmer.stem(word))
-
-        return text_clean
-
-    def __build_word_freq_dict(self, texts, labels):
-        """
-        :param list texts: A list of texts to be preprocessed
-        :param nparray labels: The labels of the input text
-        :return: {}: A dictionary where each word in the input text is associated to its number of occurrences in the text
-        """
-
-        # Convert NP Array to List since the ZIP function requires an iterable structure
-        labels_list = np.squeeze(labels).tolist()
-
-        # Start with an empty dictionary and populate it by looping over the all the texts in the list, and then in every word from each text
-        word_freqs = {}
-        for label, text in zip(labels_list, texts):
-            for word in self.__preprocess_text(text):
-                pair = (word, label)
-                if pair in word_freqs:
-                    word_freqs[pair] += 1
-                else:
-                    word_freqs[pair] = 1
-
-        return word_freqs
 
     @staticmethod
     def __sigmoid(z):
@@ -129,12 +48,11 @@ class LogisticRegression:
     def __extract_features(self, text):
         """
         :param string text: A sequence of words to be analyzed
-        :param dict word_freqs: A dictionary corresponding to the frequency of each word in the input text
         :return: x: A feature vector of dimension (1, 3) for the input text
         """
 
         # Preprocess text, removing stop words and punctuation, removing Twitter-specific features and stemming the words from the input text
-        words_clean = self.__preprocess_text(text)
+        words_clean = preprocess_text(text)
 
         # Initialize a vector full of 0 values, of dimension 1 x 3
         x = np.zeros((1, 3))
@@ -162,26 +80,17 @@ class LogisticRegression:
         all_positive_tweets = twitter_samples.strings('positive_tweets.json')
         all_negative_tweets = twitter_samples.strings('negative_tweets.json')
 
-        # Split data for testing and training
-        test_positive = all_positive_tweets[4000:]
-        test_negative = all_negative_tweets[4000:]
-
+        # Split data for training
         train_positive = all_positive_tweets[:4000]
         train_negative = all_negative_tweets[:4000]
-
-        test_x = test_positive + test_negative
         train_x = train_positive + train_negative
 
-        # Create numpy arrays for the labels
-        test_y = np.append(np.ones((len(test_positive), 1)), np.zeros((len(test_negative), 1)), axis=0)
+        # Create numpy array for the labels
         train_y = np.append(np.ones((len(train_positive), 1)), np.zeros((len(train_negative), 1)), axis=0)
-
-        # Write the shapes of the NP arrays for the testing and training data
         result_file.write("train_y.shape = " + str(train_y.shape) + "\n")
-        result_file.write("test_y.shape  = " + str(test_y.shape) + "\n")
 
         # Create word frequency dictionary
-        self.__word_freqs = self.__build_word_freq_dict(train_x, train_y)
+        self.__word_freqs = build_word_freq_dict(train_x, train_y)
 
         # Write the dictionary size
         result_file.write("Word Frequency Dictionary size: " + str(len(self.__word_freqs.keys())) + "\n")
@@ -201,8 +110,57 @@ class LogisticRegression:
         result_file.write(f"The cost after training is {J:.8f}." + "\n")
         result_file.write(f"The resulting vector of weights is {[round(t, 8) for t in np.squeeze(self.__theta)]}" + "\n")
         result_file.write("\n")
-
         result_file.close()
+
+    def test_logistic_regression(self):
+        """
+        Test the accuracy of the trained logistic regression algorithm
+        :return: accuracy: The accuracy of the algorithm, calculated as being the proportion of correctly calculated tweets out of the entire sample size
+        """
+        # Create a file for writing the results of the testing; also mark the results with a timestamp, to keep track of tests
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result_file = open("testing_results.txt", "a")
+        result_file.write("Logistic Regression Testing - " + timestamp + "\n")
+
+        # Retrieve the lists of positive and negative tweets from the NLTK sample
+        all_positive_tweets = twitter_samples.strings('positive_tweets.json')
+        all_negative_tweets = twitter_samples.strings('negative_tweets.json')
+
+        # Split the data into data for testing
+        test_positive = all_positive_tweets[4000:]
+        test_negative = all_negative_tweets[4000:]
+
+        test_x = test_positive + test_negative
+        test_y = np.append(np.ones((len(test_positive), 1)), np.zeros((len(test_negative), 1)), axis=0)
+        result_file.write("test_y.shape = " + str(test_y.shape) + "\n")
+
+        # Write the values of the weights used for calculation to the result file
+        result_file.write(f"The weights used for prediction is {[round(t, 8) for t in np.squeeze(self.__theta)]}" + "\n")
+
+        # Create a list for storing prediction results
+        y_hat = []
+
+        for text in test_x:
+            # Get the label prediction for the text (between 0 and 1, with < 0.5 meaning negative, and > meaning positive sentiments)
+            y_prediction = self.__predict_text(text)
+
+            if y_prediction > 0.5:
+                # Positive prediction
+                y_hat.append(1)
+            else:
+                # Negative prediction
+                y_hat.append(0)
+
+        # Type conversions: y_hat is a list and test_y is an array -> Convert them both to list objects, so that equality operator can be used for comparison
+        y_hat = np.array(y_hat)
+        copy_test_y = test_y.reshape(-1)
+
+        # Calculate the accuracy of prediction
+        accuracy = np.sum((copy_test_y == y_hat).astype(int)) / len(copy_test_y)
+        result_file.write("Accuracy: " + str(accuracy))
+        result_file.close()
+
+        return accuracy
 
     def __write_results_to_file(self):
         # Write the word frequency dictionary into a separate json file
@@ -243,13 +201,3 @@ class LogisticRegression:
                 return "NEUTRAL"
             else:
                 return "NEGATIVE"
-
-
-
-
-
-
-
-
-
-

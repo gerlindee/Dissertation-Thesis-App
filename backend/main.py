@@ -20,5 +20,6 @@ def add():
 
 classifier = LogisticRegression()
 classifier.load()
-app.run()
+print(classifier.test_logistic_regression())
+# app.run()
 
