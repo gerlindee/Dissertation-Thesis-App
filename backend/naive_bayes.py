@@ -147,4 +147,39 @@ class NaiveBayes:
     def load(self):
         self.__load_data_from_files()
 
+    def test_model(self):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result_file = open("testing_results.txt", "a")
+        result_file.write("Naive Bayes Testing - " + timestamp + "\n")
+
+        # Retrieve the lists of positive and negative tweets from the NLTK sample
+        all_positive_tweets = twitter_samples.strings('positive_tweets.json')
+        all_negative_tweets = twitter_samples.strings('negative_tweets.json')
+
+        # Split the data into data for testing
+        test_positive = all_positive_tweets[4000:]
+        test_negative = all_negative_tweets[4000:]
+
+        test_x = test_positive + test_negative
+        test_y = np.append(np.ones((len(test_positive), 1)), np.zeros((len(test_negative), 1)), axis=0)
+        result_file.write("test_y.shape = " + str(test_y.shape) + "\n")
+
+        # Create a list for storing prediction results
+        y_hat = []
+
+        for text in test_x:
+            if self.__predict_text(text) > 0:
+                y_hat.append(1)
+            else:
+                y_hat.append(0)
+
+        error = np.mean(np.absolute(y_hat - test_y))
+        accuracy = 1 - error
+
+        result_file.write("Accuracy: " + str(accuracy) + "\n")
+        result_file.close()
+
+        return accuracy
+
+
 

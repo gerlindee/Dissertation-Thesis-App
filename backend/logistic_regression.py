@@ -157,7 +157,7 @@ class LogisticRegression:
 
         # Calculate the accuracy of prediction
         accuracy = np.sum((copy_test_y == y_hat).astype(int)) / len(copy_test_y)
-        result_file.write("Accuracy: " + str(accuracy))
+        result_file.write("Accuracy: " + str(accuracy) + "\n")
         result_file.close()
 
         return accuracy

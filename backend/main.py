@@ -22,5 +22,6 @@ def add():
 
 classifier = LogisticRegression()
 classifier.load()
-app.run()
+classifier.test_model()
+# app.run()
 
