@@ -46,7 +46,8 @@
     "activeTab",
     "scripting",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "notifications"
   ],
   "web_accessible_resources": [
     {

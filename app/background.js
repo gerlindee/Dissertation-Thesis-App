@@ -16,6 +16,7 @@ const defaults = {
 
 let highlightIndex = 1;
 
+// Creating custom options for the context menu
 chrome.runtime.onInstalled.addListener(function () {
     chrome.contextMenus.create({
         title: "Analyse the tone of the selected text",
@@ -91,7 +92,20 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
     }
 
     if (info.menuItemId === "image_select") {
-        console.log(info.srcUrl)
+        (async () => {
+            const rawResponse = await fetch('http://127.0.0.1:5000/api/get_image_text_polarity', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({image_url: info.srcUrl})
+            });
+            const content = await rawResponse.json();
+            const textPolarity = content['polarity'];
+
+            callNotificationScript(tab, textPolarity);
+        })();
     }
 })
 
@@ -107,5 +121,17 @@ function callHighlightingScript(tab, colour) {
         })
 
         highlightIndex++
+    })
+}
+
+function callNotificationScript(tab, polarity) {
+    chrome.scripting.executeScript({
+        target: {tabId: tab.id},
+        files: ['content.js'],
+    }, function () {
+        chrome.tabs.sendMessage(tab.id, {
+            action: "show_alert_polarity",
+            polarity: polarity,
+        })
     })
 }
